@@ -1,5 +1,6 @@
 import logging
-from typing import Annotated, Sequence, TypedDict
+from collections.abc import Sequence
+from typing import Annotated, TypedDict
 
 from langchain_core.messages import BaseMessage, SystemMessage, ToolMessage
 from langchain_openai import ChatOpenAI
@@ -39,7 +40,7 @@ def build_graph(tools: list, config):
             else:
                 try:
                     content = await tool.ainvoke(tc["args"])
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001 - tool errors are reported back to the LLM
                     logger.warning("Tool %s failed: %s", tc["name"], e)
                     content = f"Tool error: {e}"
             results.append(ToolMessage(content=str(content), tool_call_id=tc["id"]))

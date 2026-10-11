@@ -1,6 +1,7 @@
 import os
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 from ronnyx.config import RonnyxConfig, _resolve, _resolve_recursive
 
@@ -47,9 +48,12 @@ class TestRonnyxConfig:
     def test_missing_api_key_raises(self, tmp_path):
         cfg = tmp_path / "ronnyx.yaml"
         cfg.write_text("llm:\n  model: gpt-4o\n")
-        with patch("ronnyx.config.load_dotenv"), patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(ValueError, match="API key not found"):
-                RonnyxConfig(path=str(cfg))
+        with (
+            patch("ronnyx.config.load_dotenv"),
+            patch.dict(os.environ, {}, clear=True),
+            pytest.raises(ValueError, match="API key not found"),
+        ):
+            RonnyxConfig(path=str(cfg))
 
     def test_loads_llm_config(self, tmp_path):
         cfg = tmp_path / "ronnyx.yaml"

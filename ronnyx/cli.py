@@ -1,6 +1,5 @@
 import argparse
 import os
-from typing import Optional
 
 import requests
 
@@ -69,7 +68,7 @@ def chat_loop(base_url: str, session_id: str) -> None:
             print("[error] response is not valid JSON")
             continue
 
-        reply: Optional[str] = payload.get("reply")
+        reply: str | None = payload.get("reply")
         if reply is None:
             print("[warning] no 'reply' field in response")
         else:
@@ -103,7 +102,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 

@@ -93,7 +93,7 @@ class RonnyxConfig:
                         description=entry.get("description", func.__doc__ or ""),
                     )
                     tools.append(tool)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - a broken custom tool must not block startup
                 logger.warning("Failed to load custom tool '%s': %s", func_path, e)
         return tools
 
