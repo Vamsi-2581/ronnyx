@@ -15,4 +15,4 @@ build/
 *.bak
 *.swp
 *.tmp
-
+.claude
