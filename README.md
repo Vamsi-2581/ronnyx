@@ -84,6 +84,41 @@ custom_tools:
 
 **custom_tools** -- Python functions loaded alongside server tools. Point to any callable or `StructuredTool` instance using its dotted import path. Use this when you need custom logic or when an external server doesn't cover your use case.
 
+**knowledge** -- Optional knowledge base over your own documents. See [Knowledge Base](#knowledge-base).
+
+## Knowledge Base
+
+Ronnyx can answer questions from your own documents using [GraphRAG](https://github.com/microsoft/graphrag). This is optional and requires Python 3.11+.
+
+```bash
+pip install -e ".[graphrag]"
+```
+
+Enable it in `ronnyx.yaml`:
+
+```yaml
+knowledge:
+  provider: graphrag
+  root: ./knowledge
+```
+
+Create the project, add your documents, and build the index:
+
+```bash
+ronnyx-index --init      # creates knowledge/ with GraphRAG settings
+# put .txt files in knowledge/input/
+ronnyx-index             # builds the index
+```
+
+Indexing calls the LLM for every chunk of every document, so it can be expensive on large collections. The command asks for confirmation first; pass `--yes` to skip it. GraphRAG settings, including models, live in `knowledge/settings.yaml`. The Ronnyx API key is used unless `GRAPHRAG_API_KEY` is set.
+
+After indexing, restart `ronnyx-serve`. The agent gets two tools:
+
+- `knowledge_local_search` -- specific questions about people, projects, or concepts in your documents
+- `knowledge_global_search` -- broad questions such as main themes or overall summaries
+
+If the index is missing or GraphRAG is not installed, the server still starts and logs a warning.
+
 ## API
 
 ### POST /api/chat

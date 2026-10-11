@@ -7,6 +7,7 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from ronnyx.api.routers import router as chat_router
 from ronnyx.config import load_config
 from ronnyx.core.agent import build_graph
+from ronnyx.knowledge import load_knowledge_tools
 
 logger = logging.getLogger("ronnyx")
 
@@ -25,6 +26,14 @@ async def lifespan(app: FastAPI):
     if custom:
         tools = tools + custom
         logger.info("Loaded %d custom tools", len(custom))
+
+    if config.knowledge:
+        knowledge_tools = await load_knowledge_tools(
+            config.knowledge, config.llm_api_key
+        )
+        if knowledge_tools:
+            tools = tools + knowledge_tools
+            logger.info("Loaded knowledge base from '%s'", config.knowledge["root"])
 
     app.state.graph = build_graph(tools, config)
     app.state.tool_names = [t.name for t in tools]

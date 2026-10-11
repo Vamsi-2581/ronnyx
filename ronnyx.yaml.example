@@ -29,6 +29,13 @@ servers:
   #   env:
   #     NOTION_TOKEN: ${NOTION_TOKEN}
 
+# Optional knowledge base over your own documents, built with GraphRAG.
+# Requires: pip install 'ronnyx[graphrag]' (Python 3.11+)
+# Setup: ronnyx-index --init, add documents to knowledge/input, then ronnyx-index.
+# knowledge:
+#   provider: graphrag
+#   root: ./knowledge
+
 # Custom Python tools - loaded alongside MCP tools.
 # Each entry points to a callable or StructuredTool instance.
 # custom_tools:

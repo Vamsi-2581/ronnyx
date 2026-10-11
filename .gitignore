@@ -1,5 +1,6 @@
 .env
 ronnyx.yaml
+knowledge/
 venv/
 __pycache__/
 *.pyc

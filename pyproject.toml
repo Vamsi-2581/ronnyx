@@ -32,10 +32,15 @@ dev = [
   "pytest-asyncio>=0.23.0,<2.0.0",
   "ruff>=0.6.0,<1.0.0",
 ]
+# Requires Python 3.11+.
+graphrag = [
+  "graphrag>=3.3.0,<4.0.0",
+]
 
 [project.scripts]
 ronnyx-chat = "ronnyx.cli:main"
 ronnyx-serve = "ronnyx.serve:main"
+ronnyx-index = "ronnyx.index:main"
 
 [project.urls]
 Homepage = "https://github.com/baranylcn/ronnyx"

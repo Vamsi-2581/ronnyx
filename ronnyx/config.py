@@ -54,6 +54,19 @@ class RonnyxConfig:
         self.context: dict = data.get("context", {})
         self._custom_tools_cfg: list = data.get("custom_tools", [])
 
+        self.knowledge: dict | None = None
+        knowledge = data.get("knowledge")
+        if knowledge:
+            provider = knowledge.get("provider", "graphrag")
+            if provider != "graphrag":
+                raise ValueError(
+                    f"Unsupported knowledge provider '{provider}'. Supported: graphrag."
+                )
+            self.knowledge = {
+                "provider": provider,
+                "root": knowledge.get("root", "knowledge"),
+            }
+
         raw_servers: dict = data.get("servers", {})
         self.mcp_servers: dict = {}
         for name, cfg in raw_servers.items():
