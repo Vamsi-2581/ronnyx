@@ -39,16 +39,20 @@ def chat_loop(base_url: str, session_id: str) -> None:
             try:
                 response = requests.get(tools_url, timeout=30)
                 response.raise_for_status()
-                tools = response.json()
-                if tools:
-                    print("Available tools:")
-                    for tool in tools:
-                        name = tool if isinstance(tool, str) else tool.get("name", str(tool))
-                        print(f" - {name}")
-                else:
-                    print("No tools loaded.")
+                tools = response.json().get("tools", [])
             except requests.RequestException as exc:
                 print(f"[error] request failed: {exc}")
+                continue
+            except ValueError:
+                print("[error] response is not valid JSON")
+                continue
+
+            if tools:
+                print("Available tools:")
+                for name in tools:
+                    print(f" - {name}")
+            else:
+                print("No tools loaded.")
             continue
 
         try:
