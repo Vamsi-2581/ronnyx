@@ -68,3 +68,35 @@ class TestChatEndpoint:
     def test_missing_fields_returns_422(self, client):
         resp = client.post("/api/chat", json={"message": "no session"})
         assert resp.status_code == 422
+
+
+class TestChatFailures:
+    def test_provider_failure_returns_actionable_error(self, client):
+        app.state.graph.ainvoke = AsyncMock(side_effect=RuntimeError("provider unavailable"))
+        resp = client.post("/api/chat", json={"session_id": "new", "message": "hello"})
+        assert resp.status_code == 502
+        assert "LLM request failed" in resp.json()["detail"]
+        assert "provider configuration" in resp.json()["detail"]
+        assert "new" not in app.state.sessions
+
+    def test_failed_graph_cannot_mutate_existing_history(self, client):
+        original = {"messages": [HumanMessage(content="previous"), AIMessage(content="reply")]}
+        app.state.sessions["existing"] = original
+
+        async def fail(state):
+            state["messages"][0].content = "mutated"
+            raise RuntimeError("provider unavailable")
+
+        app.state.graph.ainvoke = AsyncMock(side_effect=fail)
+        resp = client.post("/api/chat", json={"session_id": "existing", "message": "new message"})
+        assert resp.status_code == 502
+        assert app.state.sessions["existing"] is original
+        assert [m.content for m in original["messages"]] == ["previous", "reply"]
+
+    def test_missing_ai_reply_does_not_replace_history(self, client):
+        original = {"messages": [HumanMessage(content="previous"), AIMessage(content="reply")]}
+        app.state.sessions["existing"] = original
+        app.state.graph.ainvoke = AsyncMock(return_value={"messages": [HumanMessage(content="new")]})
+        resp = client.post("/api/chat", json={"session_id": "existing", "message": "new"})
+        assert resp.status_code == 500
+        assert app.state.sessions["existing"] is original

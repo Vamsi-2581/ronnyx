@@ -1,3 +1,6 @@
+import logging
+from copy import deepcopy
+
 from fastapi import APIRouter, HTTPException, Request
 from langchain_core.messages import AIMessage
 from pydantic import BaseModel
@@ -5,6 +8,7 @@ from pydantic import BaseModel
 from ronnyx.api.deps import apply_user_message, get_state, set_state
 from ronnyx.core.agent import AgentState
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -28,10 +32,16 @@ async def chat(req: ChatRequest, request: Request):
     graph = request.app.state.graph
     sessions = request.app.state.sessions
 
-    state: AgentState = get_state(req.session_id, sessions)
+    state: AgentState = deepcopy(get_state(req.session_id, sessions))
     state = apply_user_message(state, req.message)
-    new_state = await graph.ainvoke(state)
-    set_state(req.session_id, new_state, sessions)
+    try:
+        new_state = await graph.ainvoke(state)
+    except Exception as exc:
+        logger.exception("LLM request failed")
+        raise HTTPException(
+            status_code=502,
+            detail="LLM request failed. Please check your provider configuration and try again.",
+        ) from exc
 
     reply = next(
         (
@@ -48,4 +58,5 @@ async def chat(req: ChatRequest, request: Request):
             detail="No AI response generated",
         )
 
+    set_state(req.session_id, new_state, sessions)
     return ChatResponse(session_id=req.session_id, reply=reply)
